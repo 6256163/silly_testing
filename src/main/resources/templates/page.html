@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script><style>
+        [contenteditable].single-line {
+            white-space: nowrap;
+            width: 200px;
+            overflow: hidden;
+        }
+    </style>
+    <script>
+        function deletePage(page_id, dom) {
+            $.ajax({
+                url: "/page/" + page_id,
+                method: "delete",
+                data: page_id,
+                success: function (result,status,xhr) {
+                    if (xhr.status == 204){
+                        alert("Delete success!!")
+                        $(dom.parentNode.parentNode).remove();
+                    }
+                    if (xhr.status == 226){
+                        alert("Still using!!")
+                    }
+                },
+                error: function (xhr,status,error) {
+                    console.log(error)
+                }
+            })
+        }
+
+        function modify(e, pageId, dom) {
+            if (e.keyCode === 13) {
+                name = $(dom).text();
+                $.ajax({
+                    url: "/page/" + pageId,
+                    method: "put",
+                    data: {
+                        'name': name
+                    },
+                    success: function (data) {
+                        $(dom).text(data['name'])
+                    },
+                    error: function (data) {
+                        console.log(data)
+                    }
+                });
+                return false;
+            }
+
+        }
+        window.onload = function () {
+            $("#page_menu").addClass("active")
+        };
+
+
+    </script>
+</head>
+
+<body>
+<div th:replace="nav :: nav"></div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+
+
+            <div>
+                <h2>Page List</h2>
+                <table id="customersTable" class="table table-striped">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>NAME</th>
+                        <th colspan="2">OPERATION</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="page : ${pages}">
+                        <td th:id="${page.id}" th:text="${page.id}">id</td>
+                        <td>
+                            <div style="min-width: 10px; min-height: 20px" class="single-line" contenteditable="true"
+                                 th:text="${page.name}"
+                                 th:onkeydown="'modify(event, \'' + ${page.id} + '\',this);'">
+                            </div>
+                        </td>
+                        <td>
+                            <a class="btn btn-default" th:onclick="'deletePage(\'' + ${page.id} + '\',this);'">delete</a>
+                            <a class="btn btn-default" type="button" th:href="@{/page/{pageId}/element(pageId=${page.id})}">show element</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+            <div>
+                <form method="post" th:action="@{/page}" th:object="${page}" class="form-inline">
+                    <div class="form-group">
+                        <label for="usr">Add Page:</label>
+                        <input type="text" class="form-control" id="usr"
+                               th:field="*{name}" placeholder="input page name"/>
+                        <button class="btn btn-default" type="submit" value="add">Add</button>
+
+                    </div>
+                </form>
+            </div>
+        </div>
+
+
+        <div class="col-sm-1"></div>
+    </div>
+</div>
+
+
+</body>
+</html>

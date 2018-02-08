@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script><style>
+        [contenteditable].single-line {
+            white-space: nowrap;
+            width: 200px;
+            overflow: hidden;
+        }
+    </style>
+    <script>
+        function deleteElement(element_id, dom) {
+            $.ajax({
+                url: "/element/" + element_id,
+                method: "delete",
+                data: element_id,
+                success: function (data) {
+                    $(dom.parentNode.parentNode).remove();
+                },
+                error: function (data) {
+                    console.log(data)
+                }
+            })
+        }
+
+        function getElement(elementId, dom) {
+            $.ajax({
+                url: "/element/" + elementId,
+                method: "get",
+                success: function (data) {
+                    $("#name").val(data['name']);
+                    $("#locator").val(data['locator']['id']);
+                    $("#value").val(data['value']);
+                    $("#id").val(data['id']);
+                    $("#page").val(data['page']['id']);
+                },
+                error: function (data) {
+                    console.log(data)
+                }
+            })
+        }
+
+        function clearModal(pageId) {
+            $("#name").val("");
+            $("#locator").val("");
+            $("#value").val("");
+            $("#id").val("");
+            $("#page").val(pageId);
+        }
+
+        function search(dom) {
+            name = $(dom).val();
+            if(name!=""){
+                $.ajax({
+                    url: "/page?like=" + name,
+                    method: "get",
+                    success: function (data) {
+                        u = $("#search_result");
+                        u.innerHTML="";
+                        $.each(data, function( index, value ) {
+                            u.append(
+                                $("<a></a>")
+                                    .addClass("list-group-item")
+                                    .text(value["name"])
+                                    .attr("href", "/page/"+value["id"]+"/element")
+                            )
+                        });
+                    },
+                    error: function (data) {
+                        console.log(data)
+                    }
+                })
+            }
+
+        }
+
+
+        $(document).ready(function() {
+            $('#elementForm').submit(function(e){
+                e.preventDefault();
+                var form = {};
+                $.each($(this).serializeArray(), function (i, field) {
+                    form[field.name] = field.value || "";
+                });
+                if (form["id"]==""){
+                    delete form.id;
+                }
+                $.ajax({
+                    url: $(this).attr("action"),
+                    method: "post",
+                    data:form,
+                    success: function () {
+                        location.reload()
+                    },
+                    error: function (data) {
+                        console.log(data)
+                    }
+                })
+            })
+        });
+
+
+        window.onload = function () {
+            $("#element_menu").addClass("active")
+        };
+
+    </script>
+</head>
+
+<body>
+<div th:replace="nav :: nav"></div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+
+
+            <div>
+                <h2>Element List
+                    <span th:if="${page.id != 0}">for
+                        <strong th:text="${page.name}">Page</strong>
+                    </span>
+                </h2>
+                <div style="float: left">
+                    <a class="btn btn-default" data-toggle="modal" data-target="#edit_element"
+                       th:onclick="'clearModal(\'' + ${page.id} + '\');'">
+                        Add Element
+                    </a>
+                </div>
+
+                <div class="dropdown" style="float: right">
+                    <button class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown">Page select
+                        <span class="caret"></span></button>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1">
+                        <li th:each="p:${pages}">
+                            <a role="menuitem" tabindex="-1" th:href="@{/page/{pId}/element(pId=${p.id})}" th:text="${p.name}"></a>
+                        </li>
+                    </ul>
+                </div>
+                <table id="customersTable" class="table table-striped" th:if="${elements != null}">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>NAME</th>
+                        <th>LOCATOR</th>
+                        <th>VALUE</th>
+                        <th>PAGE</th>
+                        <th colspan="3">opreation</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="element : ${elements}">
+                        <td th:text="${element.id}">id</td>
+                        <td th:text="${element.name}">name</td>
+                        <td th:text="${element.locator.name}">locator</td>
+                        <td th:text="${element.value}">value</td>
+                        <td th:text="${element.page.name}">locator</td>
+                        <td>
+                            <a class="btn btn-default" th:onclick="'deleteElement(\'' + ${element.id} + '\',this);'">delete</a>
+                            <a class="btn btn-default" data-toggle="modal" data-target="#edit_element"
+                                    th:onclick="'getElement(\'' + ${element.id} + '\', this);'">update</a>
+                        </td>
+                    </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+
+
+        <div class="col-sm-1"></div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="edit_element" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Edit Element</h4>
+            </div>
+            <form id="elementForm" method="post"
+                  th:action="${page.id == 0} ? '/element' : @{/page/{pageId}/element(pageId=${page.id})}"
+                  th:object="${element}">
+                <input type="hidden" id="id" th:field="*{id}"/>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="page">Page:</label>
+                        <select class="form-control" id="page" th:field="*{page}">
+                            <option th:each="page : ${pages}"
+                                    th:value="${page.id}"
+                                    th:text="${page.name}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input class="form-control" id="name" th:field="*{name}"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="locator">Locator:</label>
+                        <select class="form-control" id="locator" th:field="*{locator}">
+                            <option th:each="locator : ${locators}"
+                                    th:value="${locator.id}"
+                                    th:text="${locator.name}">
+                            </option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="value">Value:</label>
+                        <input class="form-control" id="value" th:field="*{value}"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </div>
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
