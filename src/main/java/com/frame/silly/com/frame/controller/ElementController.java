@@ -3,7 +3,6 @@ package com.frame.silly.com.frame.controller;
 import com.frame.silly.com.frame.entity.Element;
 import com.frame.silly.com.frame.entity.Page;
 import com.frame.silly.com.frame.repository.ElementRepository;
-import com.frame.silly.com.frame.repository.LocatorRepository;
 import com.frame.silly.com.frame.repository.PageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -20,9 +19,6 @@ public class ElementController {
     @Autowired
     PageRepository repoP;
 
-    @Autowired
-    LocatorRepository repoL;
-
     @GetMapping(value = "/element/{eleId}")
     @ResponseBody
     public Element getOne(@PathVariable("eleId") Long eleId){
@@ -36,12 +32,8 @@ public class ElementController {
         // add empty element object
         model.addAttribute("element", new Element());
         model.addAttribute("page", new Page());
-
         // add all pages
         model.addAttribute("pages",repoP.findAllByOrderByIdDesc());
-        // add all locators
-        model.addAttribute("locators", repoL.findAll());
-
         return "element";
     }
 
@@ -57,9 +49,14 @@ public class ElementController {
         model.addAttribute("page", page);
         // add all pages
         model.addAttribute("pages",repoP.findAllByOrderByIdDesc());
-        // add all locators
-        model.addAttribute("locators", repoL.findAll());
         return "element";
+    }
+
+    @GetMapping("/pages/{pageId}/elements")
+    @ResponseBody
+    public Iterable<Element> getAllByPageByAjax(Model model, @PathVariable("pageId") Long pageId) {
+        Page page = repoP.findOne(pageId);
+        return repo.findAllByPageOrderByIdDesc(page);
     }
 
     @PostMapping("/page/{pageId}/element")

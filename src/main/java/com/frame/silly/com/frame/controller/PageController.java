@@ -29,6 +29,12 @@ public class PageController {
         return "page";
     }
 
+    @GetMapping("/pages")
+    @ResponseBody
+    public Iterable<Page> getAllByAjax(Model model) {
+        return repo.findAllByOrderByIdDesc();
+    }
+
     @GetMapping(value = "/page", params = {"like"})
     @ResponseBody
     public Iterable<Page> getOneByLike(Model model, @RequestParam(value = "like") String name) {
