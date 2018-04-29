@@ -14,11 +14,19 @@
         </div>
         <ul class="nav navbar-nav">
             <li id="run_menu"><a href="#">Run</a></li>
-            <li id="testcase_menu"><a href="#">Testcase</a></li>
-            <li id="action_menu"><a href="#">Action</a></li>
+            <li id="testcase_menu"><a href="/testcase">Testcase</a></li>
+            <li id="action_menu"><a href="/action">Action</a></li>
             <li id="element_menu"><a href="/element">Element</a></li>
             <li id="page_menu"><a href="/page">Page</a></li>
-            <li id="locator_menu"><a href="/locator">Locator</a></li>
+            <li class="dropdown" id="advance_menu">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#">Advance
+                    <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="/locator">Locator</a></li>
+                    <li><a href="/feature">Feature</a></li>
+                    <li><a href="/scenario">Scenario</a></li>
+                </ul>
+            </li>
         </ul>
         <ul class="nav navbar-nav navbar-right">
             <li><a href="#"><span class="glyphicon glyphicon-user"></span> Sign Up</a></li>

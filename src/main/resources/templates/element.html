@@ -56,32 +56,6 @@
             $("#page").val(pageId);
         }
 
-        function search(dom) {
-            name = $(dom).val();
-            if(name!=""){
-                $.ajax({
-                    url: "/page?like=" + name,
-                    method: "get",
-                    success: function (data) {
-                        u = $("#search_result");
-                        u.innerHTML="";
-                        $.each(data, function( index, value ) {
-                            u.append(
-                                $("<a></a>")
-                                    .addClass("list-group-item")
-                                    .text(value["name"])
-                                    .attr("href", "/page/"+value["id"]+"/element")
-                            )
-                        });
-                    },
-                    error: function (data) {
-                        console.log(data)
-                    }
-                })
-            }
-
-        }
-
 
         $(document).ready(function() {
             $('#elementForm').submit(function(e){
@@ -111,6 +85,7 @@
         window.onload = function () {
             $("#element_menu").addClass("active")
         };
+
 
     </script>
 </head>
@@ -154,7 +129,7 @@
                         <th>LOCATOR</th>
                         <th>VALUE</th>
                         <th>PAGE</th>
-                        <th colspan="3">opreation</th>
+                        <th colspan="2">opreation</th>
                     </tr>
                     </thead>
 
@@ -162,7 +137,7 @@
                     <tr th:each="element : ${elements}">
                         <td th:text="${element.id}">id</td>
                         <td th:text="${element.name}">name</td>
-                        <td th:text="${element.locator.name}">locator</td>
+                        <td th:text="${element.locator}">locator</td>
                         <td th:text="${element.value}">value</td>
                         <td th:text="${element.page.name}">locator</td>
                         <td>
@@ -214,10 +189,11 @@
                     <div class="form-group">
                         <label for="locator">Locator:</label>
                         <select class="form-control" id="locator" th:field="*{locator}">
-                            <option th:each="locator : ${locators}"
-                                    th:value="${locator.id}"
-                                    th:text="${locator.name}">
-                            </option>
+                            <option value="id">id</option>
+                            <option value="name">name</option>
+                            <option value="xpath">xpath</option>
+                            <option value="css">css</option>
+                            <option value="css selector">css selector</option>
                         </select>
                     </div>
                     <div class="form-group">

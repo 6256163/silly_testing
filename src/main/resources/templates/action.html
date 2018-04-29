@@ -9,7 +9,8 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
     <!-- Latest compiled JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script><style>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
         [contenteditable].single-line {
             white-space: nowrap;
             width: 200px;
@@ -17,49 +18,32 @@
         }
     </style>
     <script>
-        function deletePage(locator_id, dom) {
+        function deletePage(action_id, dom) {
             $.ajax({
-                url: "/locator/" + locator_id,
+                url: "/action/" + action_id,
                 method: "delete",
-                data: locator_id,
-                success: function (result,status,xhr) {
-                    if (xhr.status == 204){
+                data: action_id,
+                success: function (result, status, xhr) {
+                    if (xhr.status == 204) {
                         alert("Delete success!!");
                         $(dom.parentNode.parentNode).remove();
                     }
-                    if (xhr.status == 226){
-                        alert("Still using!!")
-                    }
                 },
-                error: function (xhr,status,error) {
+                error: function (xhr, status, error) {
                     console.log(error)
                 }
             })
         }
 
-        function createPage() {
-            name = $("input#name").value();
-            locatorObj = [];
-            locatorObj['name'] = name;
-            $.ajax({
-                url: "/locator",
-                method: "post",
-                data: locatorObj,
-                success: function (data) {
-                },
-                error: function (data) {
-                    console.log(data)
-                }
-            })
+        function getSteps(actionId) {
+            $("#steps").load("/action/"+actionId);
         }
 
-        function modify(e, locatorId, dom) {
+        function modify(e, actionId, dom) {
             if (e.keyCode === 13) {
                 name = $(dom).text();
-                locator = new FormData();
-                locator.append('name',name);
                 $.ajax({
-                    url: "/locator/" + locatorId,
+                    url: "/action/" + actionId,
                     method: "put",
                     data: {
                         'name': name
@@ -75,9 +59,11 @@
             }
 
         }
+
         window.onload = function () {
-            $("#locator_menu").addClass("active")
+            $("#action_menu").addClass("active")
         };
+
 
 
 
@@ -85,15 +71,16 @@
 </head>
 
 <body>
-
 <div th:replace="nav :: nav"></div>
 
 <div class="container">
     <div class="row">
         <div class="col-sm-1"></div>
         <div class="col-sm-10">
+
+
             <div>
-                <h2>Pages List</h2>
+                <h2>Action List</h2>
                 <table id="customersTable" class="table table-striped">
                     <thead>
                     <tr>
@@ -104,39 +91,48 @@
                     </thead>
 
                     <tbody>
-                    <tr th:each="locator : ${locators}">
-                        <td th:id="${locator.id}" th:text="${locator.id}">id</td>
+                    <tr th:each="action : ${actions}">
+                        <td th:id="${action.id}" th:text="${action.id}">id</td>
                         <td>
                             <div style="min-width: 10px; min-height: 20px" class="single-line" contenteditable="true"
-                                 th:text="${locator.name}"
-                                 th:onkeydown="'modify(event, \'' + ${locator.id} + '\',this);'">
+                                 th:text="${action.name}"
+                                 th:onkeydown="'modify(event, \'' + ${action.id} + '\',this);'">
                             </div>
                         </td>
                         <td>
-                            <a class="btn btn-default" th:onclick="'deletePage(\'' + ${locator.id} + '\',this);'">delete</a>
+                            <a class="btn btn-default"
+                               th:onclick="'deletePage(\'' + ${action.id} + '\',this);'">delete</a>
+                            <a class="btn btn-default" data-toggle="modal" data-target="#steps"
+                               th:onclick="'javascript:getSteps(\'' + ${action.id} + '\');'">edit</a>
                         </td>
                     </tr>
                     </tbody>
-
                 </table>
 
             </div>
             <div>
-                <form method="post" th:action="@{/locator}" th:object="${locator}" class="form-inline">
+                <form method="post" th:action="@{/action}" th:object="${action}" class="form-inline">
                     <div class="form-group">
-                            <label for="usr">Add Locator:</label>
-                            <input type="text" class="form-control" id="usr"
-                                   th:field="*{name}" placeholder="input locator name"/>
+                        <label for="usr">Add Action:</label>
+                        <input type="text" class="form-control" id="usr"
+                               th:field="*{name}" placeholder="input action name"/>
                         <button class="btn btn-default" type="submit" value="add">Add</button>
-                    </div>
 
+                    </div>
                 </form>
             </div>
         </div>
+
+
         <div class="col-sm-1"></div>
     </div>
 </div>
 
 
+<!-- Modal -->
+<div class="modal fade" role="dialog" id="steps"></div>
+<script>
+
+</script>
 </body>
 </html>

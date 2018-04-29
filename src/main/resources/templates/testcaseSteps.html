@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+
+</head>
+<body>
+
+
+<div class="modal-dialog" th:fragment="stepDetail" style="width: 800px">
+    <script>
+
+        function submitStep(actionId,dom) {
+            var form = {
+                "sort":$(dom).closest("tr").find("#sort").val(),
+                "element":$(dom).closest("tr").find("#element").val(),
+                "move":$(dom).closest("tr").find("#move").val(),
+                "hasArg":$(dom).closest("tr").find("#hasArg").val(),
+                "action":actionId
+            };
+            $.ajax({
+                url: "/action_step" ,
+                method: "post",
+                data: form,
+                success:function (action) {
+                    $("#step-list").empty();
+                    $.each(action["actionSteps"],function (index,value) {
+                        $("#step-list").append(
+                            $("<tr></tr>")
+                                .append(
+                                    $("<td></td>")
+                                        .append(
+                                            $("<div></div>")
+                                                .text(value["sort"])
+                                        )
+                                )
+                                .append(
+                                    $("<td></td>")
+                                        .append(
+                                            $("<div></div>")
+                                                .text(value["element"]["name"])
+                                        )
+                                )
+                                .append(
+                                    $("<td></td>")
+                                        .append(
+                                            $("<div></div>")
+                                                .text(value["move"])
+                                        )
+                                )
+                                .append(
+                                    $("<td></td>")
+                                        .append(
+                                            $("<div></div>")
+                                                .text(value["hasArg"])
+                                        )
+                                )
+                                .append(
+                                    $("<td></td>")
+                                        .append(
+                                            $("<a></a>")
+                                                .attr("title","delete")
+                                                .attr("class","btn btn-default")
+                                                .attr("onclick","deleteStep("+ value["id"] + ",this);")
+                                                .append(
+                                                    $("<span></span>")
+                                                        .attr("class","glyphicon glyphicon-trash")
+                                                )
+
+                                        )
+                                        .append(
+                                            $("<a></a>")
+                                                .attr("title","edit")
+                                                .attr("class","btn btn-default")
+                                                .attr("onclick","editStep("+value["id"]+",this);")
+                                                .append(
+                                                    $("<span></span>")
+                                                        .attr("class","glyphicon glyphicon-edit")
+                                                )
+                                        )
+                                )
+
+                        )
+                    });
+                    $(dom).closest("tr").find("#sort").val("");
+                    $(dom).closest("tr").find("#move").val("")
+
+                },
+                error: function (xhr, status, error) {
+                    console.log(error)
+                }
+            })
+
+        }
+
+        function deleteStep(stepId, dom) {
+            $.ajax({
+                url: "/action_step/" + stepId,
+                method: "delete",
+                data: stepId,
+                success: function (data) {
+                    $(dom.parentNode.parentNode).remove();
+                },
+                error: function (data) {
+                    console.log(data)
+                }
+            })
+        }
+
+        function checkboxChange(dom) {
+            if ($(dom).is(':checked')) {
+                $(dom).attr('value', 'true');
+            } else {
+                $(dom).attr('value', 'false');
+            }
+        }
+
+
+    </script>
+
+
+    <!-- Modal content-->
+    <div class="modal-content">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Edit Step <span>for <strong th:text="${testcase.tcId}"></strong></span></h4>
+        </div>
+            <table id="stepsTab" class="table table-striped">
+                <thead>
+                <tr>
+                    <th>SORT</th>
+                    <th>Element</th>
+                    <th>MOVE</th>
+                    <th>HAS_ARG</th>
+                    <th colspan="2">opreation</th>
+                </tr>
+                </thead>
+
+                <tbody id="step-list">
+
+                <tr th:each="step1 : ${action.actionSteps}">
+                    <td>
+                        <div th:text="${step1.sort}"></div>
+                    </td>
+                    <td>
+                        <div th:text="${step1.element.name}"></div>
+                    </td>
+                    <td>
+                        <div th:text="${step1.move}"></div>
+                    </td>
+                    <td>
+                        <div th:text="${step1.hasArg}"></div>
+                    </td>
+                    <td>
+                        <a title="delete" class="btn btn-default"
+                           th:onclick="'deleteStep(\'' + ${step1.id} + '\',this);'">
+                            <span class="glyphicon glyphicon-trash"></span>
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+                <tbody id="step-form">
+                <tr id="newStepForm">
+                    <td>
+                        <div class="form-group">
+                            <label for="sort" class="sr-only">sort</label>
+                            <input class="form-control" id="sort"/>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="form-group">
+                            <label for="element" class="sr-only">element</label>
+                            <select class="form-control" id="element">
+                                <option th:each="element:${elements}" th:value="${element.id}" th:text="${element.page.name}+' - '+${element.name}"></option>
+                            </select>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="form-group">
+                            <label for="move" class="sr-only">move</label>
+                            <input class="form-control"  id="move"/>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="checkbox">
+                            <label><input id="hasArg" type="checkbox" value="false" onchange="checkboxChange(this)"/></label>
+                        </div>
+                    </td>
+                    <td class="col-operate">
+                        <a title="submit" class="btn btn-default" type="submit"
+                           th:onclick="'submitStep(' + ${action.id} + ',this);'">
+                            <span class="glyphicon glyphicon-ok"></span>
+                        </a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+    </div>
+
+</div>
+
+</body>
+</html>

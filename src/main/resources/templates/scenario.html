@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Title</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script><style>
+        [contenteditable].single-line {
+            white-space: nowrap;
+            width: 200px;
+            overflow: hidden;
+        }
+    </style>
+    <script>
+        function deleteScenario(tcId, dom) {
+            $.ajax({
+                url: "/scenario/" + tcId,
+                method: "delete",
+                success: function (result,status,xhr) {
+                    if (xhr.status == 204){
+                        alert("Delete success!!")
+                        $(dom.parentNode.parentNode).remove();
+                    }
+                    if (xhr.status == 226){
+                        alert("Still using!!")
+                    }
+                },
+                error: function (xhr,status,error) {
+                    console.log(error)
+                }
+            })
+        }
+
+        function getScenario(scenarioId, dom) {
+            $.ajax({
+                url: "/scenario/" + scenarioId,
+                method: "get",
+                success: function (data) {
+                    $("#code").val(data['code']);
+                    $("#id").val(data['id']);
+                    $("#name").val(data['name']);
+                    $("#description").val(data['description']);
+                    $("#feature")
+                        .empty()
+                        .append(
+                            $("<option></option>")
+                                .val(data['feature']['id'])
+                                .text(data['feature']['code'])
+                        )
+                        .val(data['feature']['id']);
+                    $("#active").val([data["active"]]);
+                },
+                error: function (data) {
+                    console.log(data)
+                }
+            })
+        }
+
+        function getFeatures() {
+            $.ajax({
+                url: "/features",
+                method: "get",
+                success: function (data) {
+                    $("#feature-list").empty();
+                    $.each(data,function (index,value) {
+                        $("#feature-list").append(
+                            $("<li></li>").append(
+                                $("<a></a>")
+                                    .attr("role","menuitem")
+                                    .attr("tabindex","-1")
+                                    .attr("href","/feature/"+value['id']+"/scenario")
+                                    .text(value['code'])
+                            )
+                        )
+                    })
+
+                },
+                error: function (data) {
+                    console.log(data)
+                }
+            })
+
+        }
+
+        function clearModal() {
+            $.ajax({
+                url: "/features",
+                method: "get",
+                success: function (data) {
+                    $("#feature").empty();
+                    $.each(data,function (index,value) {
+                        $("#feature").append(
+                            $("<option></option>")
+                                .val(value['id'])
+                                .text(value['code'])
+                        )
+                    })
+                },
+                error: function (data) {
+                    console.log(data)
+                }
+            });
+            $("#code").val("");
+            $("#name").val("");
+            $("#description").val("");
+            $("#active").attr("checked","");
+        }
+
+
+        $(document).ready(function() {
+            $('#scenarioForm').submit(function(e){
+                e.preventDefault();
+                var form = {};
+                $.each($(this).serializeArray(), function (i, field) {
+                    form[field.name] = field.value || "";
+                });
+                if (form["id"]=="0"){
+                    delete form.id;
+                }
+                $.ajax({
+                    url: $(this).attr("action"),
+                    method: "post",
+                    data:form,
+                    success: function () {
+                        location.reload()
+                    },
+                    error: function (data) {
+                        console.log(data)
+                    }
+                })
+            })
+        });
+
+
+        window.onload = function () {
+            $("#advance_menu").addClass("active")
+        };
+
+
+        function checkboxChange(dom) {
+            if ($(dom).is(':checked')) {
+                $(dom).attr('value', 'true');
+            } else {
+                $(dom).attr('value', 'false');
+            }
+        }
+
+    </script>
+</head>
+
+<body>
+<div th:replace="nav :: nav"></div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-10">
+
+
+            <div>
+                <h2>Scenario List
+                    <span th:if="${feature.id != 0}">for
+                        <strong th:text="${feature.name}">Page</strong>
+                    </span>
+                </h2>
+                <div style="float: left">
+                    <a class="btn btn-default" data-toggle="modal" data-target="#edit_scenario"
+                       th:onclick="'clearModal();'">
+                        Add Scenario
+                    </a>
+                </div>
+
+                <div class="dropdown" style="float: right">
+                    <button class="btn btn-default dropdown-toggle" type="button" id="menu1" data-toggle="dropdown" onclick="getFeatures();">
+                        Feature Select
+                        <span class="caret"></span></button>
+                    <ul class="dropdown-menu" role="menu" aria-labelledby="menu1" id="feature-list">
+                        <!--<li th:each="feature:${features}">-->
+                            <!--<a role="menuitem" tabindex="-1" th:href="@{/feature/{featureId}/scenario(featureId=${feature.id})}" th:text="${feature.code}"></a>-->
+                        <!--</li>-->
+                    </ul>
+                </div>
+
+                <table id="customersTable" class="table table-striped" th:if="${scenarios != null}">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Scenario</th>
+                        <th>Description</th>
+                        <th colspan="2">opreation</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="scenario : ${scenarios}">
+                        <td th:text="${scenario.code}">id</td>
+                        <td th:text="${scenario.name}">scenario</td>
+                        <td th:text="${scenario.description}">description</td>
+                        <td>
+                            <a title="delete" class="btn btn-default" th:onclick="'deleteScenario(\'' + ${scenario.id} + '\',this);'">
+                                <span class="glyphicon glyphicon-trash"></span>
+                            </a>
+                            <a title="edit" class="btn btn-default" data-toggle="modal" data-target="#edit_scenario"
+                                    th:onclick="'getScenario(\'' + ${scenario.id} + '\', this);'">
+                                <span class="glyphicon glyphicon-edit"></span>
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+
+        <div class="col-sm-1"></div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="edit_scenario" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Edit Scenario</h4>
+            </div>
+            <form id="scenarioForm" method="post"
+                  th:action="@{/scenario}"
+                  th:object="${scenario}">
+                <input type="hidden" id="id" th:field="*{id}"/>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="feature">Feature:</label>
+                        <select class="form-control" id="feature" th:field="*{feature}">
+                            <!--<option th:each="feature : ${features}"-->
+                                    <!--th:value="${feature.id}"-->
+                                    <!--th:text="${feature.code}">-->
+                            <!--</option>-->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="code">ID:</label>
+                        <input class="form-control" id="code" th:field="*{code}"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Scenario:</label>
+                        <input class="form-control" id="name" th:field="*{name}"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        <textarea class="form-control" id="description" th:field="*{description}"></textarea>
+                    </div>
+                    <div class="checkbox">
+                        <label><input id="active" type="checkbox" th:field="*{active}"
+                                      value="true" onchange="checkboxChange(this)"  th:checked="true"/>
+                        Active
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
