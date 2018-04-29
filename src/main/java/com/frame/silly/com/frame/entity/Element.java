@@ -12,9 +12,8 @@ public class Element extends AbstractEntity {
     @JoinColumn(nullable = false)
     private Page page;
 
-    @ManyToOne
     @JoinColumn(nullable = false)
-    private Locator locator;
+    private String locator;
 
     @JoinColumn(nullable = false)
     private String value;
@@ -30,11 +29,11 @@ public class Element extends AbstractEntity {
         this.name = name;
     }
 
-    public Locator getLocator() {
+    public String getLocator() {
         return locator;
     }
 
-    public void setLocator(Locator locator) {
+    public void setLocator(String locator) {
         this.locator = locator;
     }
 
