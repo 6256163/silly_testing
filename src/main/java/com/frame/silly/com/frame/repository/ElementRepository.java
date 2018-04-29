@@ -14,7 +14,7 @@ public interface ElementRepository extends PagingAndSortingRepository<Element, L
 
     List<Element> findAllByPageId(long pageId);
 
-    List<Element> findAllByLocatorId(long locatorId);
+    List<Element> findAllByOrderByPage();
 
 
 
